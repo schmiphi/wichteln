@@ -347,9 +347,9 @@
       });
     })();
 
-    // Set dynamic site title to next year (e.g. "Riwa-Wichtelator 2026")
+    // Set dynamic site title to next year (e.g. "Riwa-Wichtelator 2025")
     (function setSiteTitle(){
-      const nextYear = new Date().getFullYear() + 1;
+      const nextYear = new Date().getFullYear();
       siteTitleEl.textContent = `Riwa-Wichtelator ${nextYear}`;
     })();
 
@@ -382,7 +382,7 @@
     // - tries multiple deterministic random shuffles; if a shuffle fails constraints, try next shuffle
     // - returns null if no valid assignment found after attempts
     function computeAssignment() {
-      const nextYear = new Date().getFullYear() + 1;
+      const nextYear = new Date().getFullYear();
 
       const baseSeed = nextYear >>> 0;
       // use SORTED_MEMBERS as the giver ordering (stable & matches UI)
