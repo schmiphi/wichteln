@@ -1,113 +1,474 @@
- <!DOCTYPE html>
- <html lang="de">
- <head>
-   <meta charset="UTF-8">
-     <title>Geschenke-Zuteilung für Familien</title>
-       <style>
-           body { font-family: Arial, sans-serif; margin: 2em; background: #f8fafd; }
-               h2 { color: #276678; }
-                   label, select, input, button { margin: 0.5em 0; display: block; }
-                       #result { margin-top: 1em; font-weight: bold; color: #276678; }
-                           .hinweis { font-size: 0.95em; color: #888; margin-bottom: 1em; }
-                               form { background: #fff; padding: 1em 2em; border-radius: 8px; max-width: 350px; box-shadow: 0 2px 8px #0002; }
-                                 </style>
-                                 </head>
-                                 <body>
-                                   <h2>Wer bekommt dein Geschenk?</h2>
-                                     <div class="hinweis">
-                                         Wähle deinen Namen und gib das passende Familienpasswort ein.<br>
-                                             Die Zuteilung bleibt das ganze Jahr gleich und ist für jede Familie getrennt.
-                                               </div>
-                                                 <form id="giftForm">
-                                                     <label for="memberSelect">Dein Name:</label>
-                                                         <select id="memberSelect" required>
-                                                               <option value="">Bitte Namen auswählen</option>
-                                                                   </select>
-                                                                       <label for="passwordInput">Familien-Passwort:</label>
-                                                                           <input type="password" id="passwordInput" required>
-                                                                               <button type="submit">Empfänger anzeigen</button>
-                                                                                 </form>
-                                                                                   <div id="result"></div>
-                                                                                     <script>
-                                                                                         // Familienmitglieder (beliebig anpassen!)
-                                                                                             const FAMILY_MEMBERS = [
-                                                                                                   { name: "Anna", index: 0 },
-                                                                                                         { name: "Ben", index: 0 },
-                                                                                                               { name: "Clara", index: 1 },
-                                                                                                                     { name: "David", index: 1 },
-                                                                                                                           { name: "Eva", index: 2 },
-                                                                                                                                 { name: "Felix", index: 2 }
-                                                                                                                                       // Weitere Mitglieder hier ergänzen
-                                                                                                                                           ];
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Geschenke-Zuteilung für Familien</title>
 
-                                                                                                                                               // Passwort pro Familien-Index (beliebig anpassen!)
-                                                                                                                                                   const FAMILY_PASSWORDS = {
-                                                                                                                                                         0: "schnee",    // Familie 0
-                                                                                                                                                               1: "kerze",     // Familie 1
-                                                                                                                                                                     2: "stern"      // Familie 2
-                                                                                                                                                                           // Weitere Index-Passwörter hier ergänzen
-                                                                                                                                                                               };
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700;800&display=swap" rel="stylesheet">
 
-                                                                                                                                                                                   // Auswahlliste füllen
-                                                                                                                                                                                       const memberSelect = document.getElementById("memberSelect");
-                                                                                                                                                                                           FAMILY_MEMBERS.forEach((member, i) => {
-                                                                                                                                                                                                 const opt = document.createElement("option");
-                                                                                                                                                                                                       opt.value = i; // Array-Position
-                                                                                                                                                                                                             opt.textContent = member.name;
-                                                                                                                                                                                                                   memberSelect.appendChild(opt);
-                                                                                                                                                                                                                       });
+  <style>
+    :root{
+      --bg-1: #0f1724;
+      --accent-1: #ffb86b;
+      --accent-2: #ff6b9f;
+      --card-bg: rgba(255,255,255,0.98);
+      --muted: #6b7280;
+      --success: #16a34a;
+      --shadow: 0 10px 30px rgba(2,6,23,0.45);
+      --glass: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    }
 
-                                                                                                                                                                                                                           // Seeded Shuffle: stabile Reihenfolge für das Jahr
-                                                                                                                                                                                                                               function seededRandom(seed) {
-                                                                                                                                                                                                                                     let x = Math.sin(seed) * 10000;
-                                                                                                                                                                                                                                           return x - Math.floor(x);
-                                                                                                                                                                                                                                               }
-                                                                                                                                                                                                                                                   function seededShuffle(array, seed) {
-                                                                                                                                                                                                                                                         let arr = array.slice();
-                                                                                                                                                                                                                                                               for (let i = arr.length - 1; i > 0; i--) {
-                                                                                                                                                                                                                                                                       seed = seededRandom(seed + i) * 10000;
-                                                                                                                                                                                                                                                                               let j = Math.floor(seed % (i + 1));
-                                                                                                                                                                                                                                                                                       [arr[i], arr[j]] = [arr[j], arr[i]];
-                                                                                                                                                                                                                                                                                             }
-                                                                                                                                                                                                                                                                                                   return arr;
-                                                                                                                                                                                                                                                                                                       }
+    /* Festive gradient background with stars/ornaments */
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:"Nunito", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, #07142a 0%, #08243f 40%, #072a2c 100%);
+      color: #0b1220;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
 
-                                                                                                                                                                                                                                                                                                           // Zuteilung (Geschenk geht zu anderem Familien-Index)
-                                                                                                                                                                                                                                                                                                               function assignRecipients(members, seed) {
-                                                                                                                                                                                                                                                                                                                     let indices = members.map((_, i) => i);
-                                                                                                                                                                                                                                                                                                                           let shuffled;
-                                                                                                                                                                                                                                                                                                                                 // Es darf kein Geschenk an gleiche Familie gehen!
-                                                                                                                                                                                                                                                                                                                                       do {
-                                                                                                                                                                                                                                                                                                                                               shuffled = seededShuffle(indices, seed);
-                                                                                                                                                                                                                                                                                                                                                     } while (
-                                                                                                                                                                                                                                                                                                                                                             shuffled.some((shuffIdx, i) => 
-                                                                                                                                                                                                                                                                                                                                                                       members[shuffIdx].index === members[i].index
-                                                                                                                                                                                                                                                                                                                                                                               )
-                                                                                                                                                                                                                                                                                                                                                                                     );
-                                                                                                                                                                                                                                                                                                                                                                                           let assignments = {};
-                                                                                                                                                                                                                                                                                                                                                                                                 indices.forEach((idx, i) => {
-                                                                                                                                                                                                                                                                                                                                                                                                         assignments[idx] = shuffled[i];
-                                                                                                                                                                                                                                                                                                                                                                                                               });
-                                                                                                                                                                                                                                                                                                                                                                                                                     return assignments;
-                                                                                                                                                                                                                                                                                                                                                                                                                         }
+    .scene {
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 3rem 1rem;
+      position:relative;
+      overflow:hidden;
+    }
 
-                                                                                                                                                                                                                                                                                                                                                                                                                             document.getElementById("giftForm").addEventListener("submit", function(e) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                   e.preventDefault();
-                                                                                                                                                                                                                                                                                                                                                                                                                                         const memberArrayIdx = parseInt(memberSelect.value, 10);
-                                                                                                                                                                                                                                                                                                                                                                                                                                               const member = FAMILY_MEMBERS[memberArrayIdx];
-                                                                                                                                                                                                                                                                                                                                                                                                                                                     const password = document.getElementById("passwordInput").value;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                           const correctPassword = FAMILY_PASSWORDS[member.index];
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                 if (password !== correctPassword) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                         document.getElementById("result").textContent = "Falsches Familienpasswort!";
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 return;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             const year = new Date().getFullYear();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   const assignments = assignRecipients(FAMILY_MEMBERS, year);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         const recipientIdx = assignments[memberArrayIdx];
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               const recipient = FAMILY_MEMBERS[recipientIdx];
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     document.getElementById("result").textContent =
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             `Du schenkst an: ${recipient.name}`;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </script>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </body>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </html>
+    /* Decorative ornaments */
+    .ornament{
+      position:absolute;
+      border-radius:50%;
+      filter:blur(10px);
+      opacity:0.12;
+      transform: translateZ(0);
+    }
+    .ornament--1{ width:420px; height:420px; background: radial-gradient(circle at 30% 30%, #ffb86b, #ff8fa3 60%); top:-8%; left:-8%;}
+    .ornament--2{ width:300px; height:300px; background: radial-gradient(circle at 70% 30%, #7ee7ff, #8bf6c1 60%); bottom:-6%; right:-12%;}
+    .snowflake{
+      position:absolute;
+      width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.12);box-shadow:0 0 10px rgba(255,255,255,0.1);
+      animation: drift 10s linear infinite;
+      opacity:0.9;
+    }
+    @keyframes drift{
+      0%{transform: translateY(-5vh) translateX(0) scale(0.7)}
+      50%{transform: translateY(40vh) translateX(15vw) scale(1)}
+      100%{transform: translateY(90vh) translateX(-10vw) scale(0.9)}
+    }
+
+    /* Card */
+    .card{
+      width:100%;
+      max-width:760px;
+      background: var(--card-bg);
+      border-radius:14px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      position:relative;
+      z-index:10;
+      display:grid;
+      grid-template-columns: 1fr 340px;
+      gap:24px;
+      align-items:start;
+    }
+
+    h1{
+      margin:0 0 0.25rem 0;
+      font-size:1.6rem;
+      color: #052433;
+      letter-spacing: -0.02em;
+    }
+
+    p.lead{
+      margin:0 0 1rem 0;
+      color:var(--muted);
+      font-size:0.95rem;
+    }
+
+    /* Form area */
+    form{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    label{
+      font-size:0.85rem;
+      color: #334155;
+      font-weight:700;
+      margin-top:8px;
+    }
+
+    select, input[type="password"]{
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #e6edf3;
+      background: linear-gradient(180deg,#fff,#fbfdff);
+      font-size:1rem;
+      outline:none;
+    }
+
+    .controls{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    button.primary{
+      background: linear-gradient(90deg,var(--accent-1), var(--accent-2));
+      color:white;
+      border:0;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+      box-shadow: 0 6px 18px rgba(255,107,159,0.18);
+      transition: transform .12s ease;
+    }
+    button.primary:active{ transform:translateY(1px) scale(.997) }
+    button.ghost{
+      background:transparent;
+      border:1px solid #e6edf3;
+      padding:10px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      color:#0f1724;
+    }
+
+    .right{
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.98));
+      padding:18px;
+      border-radius:10px;
+      border:1px solid rgba(2,6,23,0.04);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      justify-content:center;
+      align-items:center;
+    }
+
+    .result-card{
+      width:100%;
+      text-align:center;
+      padding:14px;
+      border-radius:8px;
+      background: linear-gradient(90deg, rgba(255,255,255,1), rgba(255,250,244,0.98));
+      box-shadow: 0 6px 24px rgba(3,7,18,0.06);
+    }
+
+    .recipient{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .avatar{
+      width:56px;height:56px;border-radius:12px;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-weight:800;color:white;font-size:18px;
+      background: linear-gradient(135deg,var(--accent-2),var(--accent-1));
+      box-shadow:0 6px 18px rgba(255,107,159,0.14);
+    }
+
+    .recipient .name{
+      font-size:1.15rem;
+      color:#052433;
+      font-weight:800;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:0.92rem;
+    }
+
+    .small{
+      font-size:0.85rem;
+    }
+
+    .inline {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .copy-btn{
+      padding:8px 10px;border-radius:8px;border:0;background:#f1f5f9;cursor:pointer;
+      font-weight:700;
+    }
+
+    footer.note{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:0.85rem;
+    }
+
+    .confetti {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      overflow: visible;
+    }
+
+    @media (max-width:900px){
+      .card{ grid-template-columns:1fr; padding:20px; }
+      .ornament--1, .ornament--2 { display:none; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="scene" role="main" aria-labelledby="page-title">
+    <div class="ornament ornament--1" aria-hidden="true"></div>
+    <div class="ornament ornament--2" aria-hidden="true"></div>
+
+    <!-- some gentle snowflakes -->
+    <div class="snowflake" style="left:10%; animation-delay:0s;"></div>
+    <div class="snowflake" style="left:30%; width:8px;height:8px; animation-duration:14s; animation-delay:2s;"></div>
+    <div class="snowflake" style="left:55%; animation-duration:9s; animation-delay:0.7s;"></div>
+    <div class="snowflake" style="left:78%; animation-duration:12s; animation-delay:1.5s;"></div>
+
+    <div class="card" aria-live="polite">
+      <div>
+        <h1 id="page-title">Wer bekommt dein Geschenk?</h1>
+        <p class="lead">Wähle deinen Namen, gib das Familien-Passwort ein und sieh, an wen du dieses Jahr ein Geschenk gibst. Die Zuteilung bleibt gleich — standardmäßig in Rotation, optional zufällig.</p>
+
+        <form id="giftForm" aria-describedby="form-help">
+          <label for="memberSelect">Dein Name</label>
+          <select id="memberSelect" required aria-required="true">
+            <option value="">Bitte Namen auswählen …</option>
+          </select>
+
+          <label for="passwordInput">Familien-Passwort</label>
+          <input id="passwordInput" type="password" autocomplete="current-password" required aria-required="true" placeholder="••••••">
+
+          <div class="controls">
+            <label class="inline small"><input id="randomToggle" type="checkbox"> Zufällige Zuteilung</label>
+            <div style="flex:1"></div>
+            <button class="primary" type="submit" aria-label="Empfänger anzeigen">Empfänger anzeigen</button>
+            <button class="ghost" type="button" id="resetBtn" title="Formular zurücksetzen">Zurücksetzen</button>
+          </div>
+
+          <div id="form-help" class="small muted">Die Zuteilung erfolgt pro Familie. Jede Familie hat ein eigenes Passwort.</div>
+        </form>
+
+        <footer class="note">Tipp: Familien-Passwörter sollten vertraulich bleiben.</footer>
+      </div>
+
+      <aside class="right" aria-labelledby="result-title">
+        <div id="result" class="result-card" role="status" aria-live="polite">
+          <div id="resultEmpty" class="muted">Hier erscheint der Empfänger.</div>
+          <div id="resultCard" style="display:none;">
+            <div class="recipient">
+              <div class="avatar" id="avatar">A</div>
+              <div>
+                <div class="name" id="recipientName">Anna</div>
+                <div class="muted small" id="recipientHint">Familie: —</div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px; display:flex; gap:8px; align-items:center; justify-content:center;">
+              <button id="copyBtn" class="copy-btn" title="Name kopieren">Kopieren</button>
+              <button id="shareBtn" class="copy-btn" title="Teilen" style="display:none;">Teilen</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div id="confetti" class="confetti" aria-hidden="true"></div>
+  </div>
+
+  <script>
+    // Familienmitglieder (beliebig anpassen!)
+    const FAMILY_MEMBERS = [
+      { name: "Anna", index: 0 },
+      { name: "Ben", index: 0 },
+      { name: "Clara", index: 1 },
+      { name: "David", index: 1 },
+      { name: "Eva", index: 2 },
+      { name: "Felix", index: 2 }
+      // Weitere Mitglieder hier ergänzen
+    ];
+
+    // Passwort pro Familien-Index (beliebig anpassen!)
+    const FAMILY_PASSWORDS = {
+      0: "schnee", // Familie 0
+      1: "kerze",  // Familie 1
+      2: "stern"   // Familie 2
+      // Weitere Index-Passwörter [...]
+    };
+
+    // --- DOM references ---
+    const memberSelect = document.getElementById('memberSelect');
+    const form = document.getElementById('giftForm');
+    const passwordInput = document.getElementById('passwordInput');
+    const resultEmpty = document.getElementById('resultEmpty');
+    const resultCard = document.getElementById('resultCard');
+    const avatarEl = document.getElementById('avatar');
+    const recipientNameEl = document.getElementById('recipientName');
+    const recipientHintEl = document.getElementById('recipientHint');
+    const copyBtn = document.getElementById('copyBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const randomToggle = document.getElementById('randomToggle');
+    const confettiContainer = document.getElementById('confetti');
+
+    // Populate select with optgroups by family index for easier UX
+    (function populateSelect(){
+      // Group members by index
+      const groups = {};
+      FAMILY_MEMBERS.forEach(m => {
+        if(!groups[m.index]) groups[m.index] = [];
+        groups[m.index].push(m);
+      });
+
+      // For each family, create an optgroup
+      Object.keys(groups).sort((a,b)=>a-b).forEach(idx => {
+        const optg = document.createElement('optgroup');
+        optg.label = `Familie ${idx}`;
+        groups[idx].forEach(member => {
+          const o = document.createElement('option');
+          o.value = member.name;
+          o.textContent = member.name;
+          o.dataset.familyIndex = member.index;
+          optg.appendChild(o);
+        });
+        memberSelect.appendChild(optg);
+      });
+    })();
+
+    function showResult(name, familyIndex){
+      resultEmpty.style.display = 'none';
+      resultCard.style.display = 'block';
+      avatarEl.textContent = String(name).trim().slice(0,2).toUpperCase();
+      recipientNameEl.textContent = name;
+      recipientHintEl.textContent = `Familie ${familyIndex}`;
+      copyBtn.dataset.copy = name;
+    }
+
+    function clearResult(){
+      resultEmpty.style.display = '';
+      resultCard.style.display = 'none';
+    }
+
+    function runConfetti(){
+      // simple DOM confetti: create colored pieces and animate them, auto-remove
+      const colors = ["#FF6B9F","#FFD36E","#7EE7FF","#8BF6C1","#C084FC"];
+      const count = 26;
+      for(let i=0;i<count;i++){
+        const piece = document.createElement('div');
+        piece.style.position = 'absolute';
+        piece.style.width = `${Math.random()*10 + 6}px`;
+        piece.style.height = `${Math.random()*6 + 6}px`;
+        piece.style.left = `${50 + (Math.random()-0.5)*60}%`;
+        piece.style.top = `${40 + (Math.random()-0.5)*20}%`;
+        piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+        piece.style.opacity = '0.95';
+        piece.style.borderRadius = `${Math.random()*20}%`;
+        piece.style.transform = `translateY(0) rotate(${Math.random()*360}deg)`;
+        piece.style.zIndex = 40;
+        piece.style.pointerEvents = 'none';
+        piece.style.transition = `transform 1200ms cubic-bezier(.2,.9,.3,1), opacity 1200ms ease`;
+        confettiContainer.appendChild(piece);
+
+        // force layout then animate
+        requestAnimationFrame(() => {
+          const vx = (Math.random()-0.5)*300;
+          const vy = - (Math.random()*600 + 200);
+          const rot = (Math.random()-0.5)*720;
+          piece.style.transform = `translate(${vx}px, ${vy}px) rotate(${rot}deg)`;
+          piece.style.opacity = '0';
+        });
+
+        // remove after animation
+        setTimeout(()=> piece.remove(), 1400 + Math.random()*300);
+      }
+    }
+
+    // Form submit handling
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      clearResult();
+
+      const selectedName = memberSelect.value;
+      if(!selectedName){
+        alert('Bitte einen Namen auswählen.');
+        return;
+      }
+
+      const member = FAMILY_MEMBERS.find(m => m.name === selectedName);
+      if(!member){
+        alert('Ausgewähltes Mitglied nicht gefunden.');
+        return;
+      }
+
+      const familyIndex = member.index;
+      const correctPassword = (FAMILY_PASSWORDS[familyIndex] || '').trim();
+      const providedPassword = (passwordInput.value || '').trim();
+
+      if(providedPassword !== correctPassword){
+        alert('Falsches Familien-Passwort.');
+        return;
+      }
+
+      // All members in this family
+      const familyMembers = FAMILY_MEMBERS.filter(m => m.index === familyIndex).map(m => m.name);
+
+      if(familyMembers.length <= 1){
+        alert('In deiner Familie gibt es keine weiteren Personen für die Zuteilung.');
+        return;
+      }
+
+      let recipient;
+      if(randomToggle.checked){
+        // random but not the same person
+        const pool = familyMembers.filter(n => n !== selectedName);
+        recipient = pool[Math.floor(Math.random()*pool.length)];
+      } else {
+        // deterministic rotation
+        const pos = familyMembers.indexOf(selectedName);
+        recipient = familyMembers[(pos + 1) % familyMembers.length];
+      }
+
+      showResult(recipient, familyIndex);
+      runConfetti();
+    });
+
+    // Copy button
+    copyBtn.addEventListener('click', () => {
+      const text = copyBtn.dataset.copy || '';
+      if(!text) return;
+      navigator.clipboard?.writeText(text).then(()=>{
+        copyBtn.textContent = 'Kopiert ✓';
+        setTimeout(()=> copyBtn.textContent = 'Kopieren', 1500);
+      }).catch(()=>{
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); copyBtn.textContent = 'Kopiert ✓'; }
+        catch(e){ alert('Kopie nicht möglich'); }
+        ta.remove();
+        setTimeout(()=> copyBtn.textContent = 'Kopieren', 1500);
+      });
+    });
+
+    // Reset button
+    resetBtn.addEventListener('click', () => {
+      form.reset();
+      clearResult();
+    });
+
+    // Improve accessibility: focus select on load
+    window.addEventListener('load', () => {
+      memberSelect.focus();
+    });
+  </script>
+</body>
+</html>
