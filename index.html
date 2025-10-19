@@ -247,7 +247,7 @@
       <div>
         <div id="siteTitle" class="site-title" aria-hidden="true"></div>
         <h1 id="page-title">Wer bekommt dein Geschenk?</h1>
-        <p class="lead">Wähle deinen Namen, gib das Familien-Passwort ein und sieh, an wen du dieses Jahr ein Geschenk gibst.</p>
+        <p class="lead">Wähle deinen Namen, gib das Familien-Passwort ein und sieh, wem du dieses Jahr ein Geschenk gibst.</p>
 
         <form id="giftForm" aria-describedby="form-help">
           <label for="memberSelect">Dein Name</label>
@@ -263,8 +263,6 @@
             <button class="primary" type="submit" aria-label="Empfänger anzeigen">Empfänger anzeigen</button>
             <button class="ghost" type="button" id="resetBtn" title="Formular zurücksetzen">Zurücksetzen</button>
           </div>
-
-          <div id="form-help" class="small muted">Die Zuteilung erfolgt pro Familie. Jede Familie hat ein eigenes Passwort.</div>
         </form>
 
         <footer class="note">Tipp: Familien-Passwörter sollten vertraulich bleiben.</footer>
@@ -298,13 +296,13 @@
   <script>
     // Familienmitglieder (beliebig anpassen!)
     const FAMILY_MEMBERS = [
-      { name: "Adam", index: 0 },
-      { name: "Ben", index: 0 },
-      { name: "Clara", index: 1 },
-      { name: "David", index: 1 },
-      { name: "Eva", index: 2 },
-      { name: "Felix", index: 2 }
-      // Weitere Mitglieder hier ergänzen
+      { name: "Emil", index: 0 },
+      { name: "Anton", index: 0 },
+      { name: "Juri", index: 1 },
+      { name: "Ayla", index: 1 },
+      { name: "Ottilia", index: 2 },
+      { name: "Kleo", index: 2 }
+      { name: "Dawson", index: 3 }
     ];
 
     // Passwort pro Familien-Index (beliebig anpassen!)
@@ -312,7 +310,7 @@
       0: "schnee", // Familie 0
       1: "kerze",  // Familie 1
       2: "stern"   // Familie 2
-      // Weitere Index-Passwörter [...]
+      3: "christbaum"   // Familie 3
     };
 
     // --- DOM references ---
@@ -328,10 +326,6 @@
     const resetBtn = document.getElementById('resetBtn');
     const confettiContainer = document.getElementById('confetti');
     const siteTitleEl = document.getElementById('siteTitle');
-
-    // cache for yearly assignment (so computeAssignment runs once per page load/year)
-    let cachedAssignment = null;
-    let cachedSeedYear = null;
 
     // create a stable sorted members array used both for UI and assignment generation
     const SORTED_MEMBERS = FAMILY_MEMBERS.slice().sort((a,b)=>{
@@ -389,7 +383,6 @@
     // - returns null if no valid assignment found after attempts
     function computeAssignment() {
       const nextYear = new Date().getFullYear() + 1;
-      if (cachedAssignment && cachedSeedYear === nextYear) return cachedAssignment;
 
       const baseSeed = nextYear >>> 0;
       // use SORTED_MEMBERS as the giver ordering (stable & matches UI)
@@ -420,8 +413,6 @@
         if (ok) {
           const mapping = {};
           for (let i = 0; i < N; i++) mapping[givers[i].name] = receivers[i].name;
-          cachedAssignment = mapping;
-          cachedSeedYear = nextYear;
           return mapping;
         }
 
@@ -507,7 +498,7 @@
         return;
       }
 
-      // Generate (or fetch cached) assignment for the year
+      // Generate assignment for the year
       const assignment = computeAssignment();
       if (!assignment) {
         alert('Es konnte keine gültige Zuteilung gefunden werden. Bitte überprüfe die Familienzusammensetzung.');
