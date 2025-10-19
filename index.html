@@ -395,7 +395,7 @@
 
       const maxAttempts = 5000;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const rng = mulberry32((baseSeed + attempt) >>> 0);
+        const rng = mulberry32((baseSeed + attempt * 97) >>> 0);
         // create a shuffled receivers list of objects
         const receivers = shuffleArray(givers.map(m => ({ name: m.name, index: m.index })), rng);
 
