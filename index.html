@@ -278,7 +278,8 @@
               <div class="avatar" id="avatar">A</div>
               <div>
                 <div class="name" id="recipientName">Anna</div>
-                <div class="muted small" id="recipientHint">Familie: —</div>
+                <!-- family hint removed from visible UI -->
+                <div class="muted small" id="recipientHint" style="display:none;">Familie: —</div>
               </div>
             </div>
 
@@ -328,18 +329,22 @@
     const confettiContainer = document.getElementById('confetti');
     const siteTitleEl = document.getElementById('siteTitle');
 
+    // cache for yearly assignment (so computeAssignment runs once per page load/year)
+    let cachedAssignment = null;
+    let cachedSeedYear = null;
+
+    // create a stable sorted members array used both for UI and assignment generation
+    const SORTED_MEMBERS = FAMILY_MEMBERS.slice().sort((a,b)=>{
+      const na = a.name.toLowerCase();
+      const nb = b.name.toLowerCase();
+      if(na < nb) return -1;
+      if(na > nb) return 1;
+      return 0;
+    });
+
     // Populate select with names alphabetically (no family groups)
     (function populateSelect(){
-      // Clone member list and sort by name (case-insensitive)
-      const sorted = FAMILY_MEMBERS.slice().sort((a,b)=>{
-        const na = a.name.toLowerCase();
-        const nb = b.name.toLowerCase();
-        if(na < nb) return -1;
-        if(na > nb) return 1;
-        return 0;
-      });
-
-      sorted.forEach(member => {
+      SORTED_MEMBERS.forEach(member => {
         const o = document.createElement('option');
         o.value = member.name;
         o.textContent = member.name;
@@ -354,12 +359,85 @@
       siteTitleEl.textContent = `Riwa-Wichtelator ${nextYear}`;
     })();
 
-    function showResult(name, familyIndex){
+    // seeded RNG (mulberry32 variant)
+    function mulberry32(seed) {
+      let t = seed >>> 0;
+      return function() {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    // Fisher-Yates shuffle using provided RNG function
+    function shuffleArray(arr, rng) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // computeAssignment:
+    // - returns an object mapping giverName -> receiverName
+    // - ensures every giver gives exactly one gift and every receiver receives exactly one gift
+    // - ensures giver and receiver are from different families
+    // - deterministic for a given year (seed = nextYear)
+    // - tries multiple deterministic random shuffles; if a shuffle fails constraints, try next shuffle
+    // - returns null if no valid assignment found after attempts
+    function computeAssignment() {
+      const nextYear = new Date().getFullYear() + 1;
+      if (cachedAssignment && cachedSeedYear === nextYear) return cachedAssignment;
+
+      const baseSeed = nextYear >>> 0;
+      // use SORTED_MEMBERS as the giver ordering (stable & matches UI)
+      const givers = SORTED_MEMBERS.slice(); // array of {name, index}
+      const N = givers.length;
+
+      // trivial impossible checks
+      // if there is only one person overall, impossible
+      if (N <= 1) return null;
+
+      const maxAttempts = 5000;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const rng = mulberry32((baseSeed + attempt) >>> 0);
+        // create a shuffled receivers list of objects
+        const receivers = shuffleArray(givers.map(m => ({ name: m.name, index: m.index })), rng);
+
+        // check constraints: for each giver at pos i, receiver at same i must be different person and different family
+        let ok = true;
+        for (let i = 0; i < N; i++) {
+          const giver = givers[i];
+          const receiver = receivers[i];
+          if (giver.name === receiver.name || giver.index === receiver.index) {
+            ok = false;
+            break;
+          }
+        }
+
+        if (ok) {
+          const mapping = {};
+          for (let i = 0; i < N; i++) mapping[givers[i].name] = receivers[i].name;
+          cachedAssignment = mapping;
+          cachedSeedYear = nextYear;
+          return mapping;
+        }
+
+        // else try next attempt (different shuffle). No repair attempts.
+      }
+
+      // no valid assignment found after attempts
+      return null;
+    }
+
+    function showResult(name){
       resultEmpty.style.display = 'none';
       resultCard.style.display = 'block';
       avatarEl.textContent = String(name).trim().slice(0,2).toUpperCase();
       recipientNameEl.textContent = name;
-      recipientHintEl.textContent = `Familie ${familyIndex}`;
+      recipientHintEl.style.display = 'none';
       copyBtn.dataset.copy = name;
     }
 
@@ -413,6 +491,7 @@
         return;
       }
 
+      // find member in original list (index property comes from FAMILY_MEMBERS)
       const member = FAMILY_MEMBERS.find(m => m.name === selectedName);
       if(!member){
         alert('Ausgewähltes Mitglied nicht gefunden.');
@@ -428,19 +507,21 @@
         return;
       }
 
-      // All members in this family
-      const familyMembers = FAMILY_MEMBERS.filter(m => m.index === familyIndex).map(m => m.name);
-
-      if(familyMembers.length <= 1){
-        alert('In deiner Familie gibt es keine weiteren Personen für die Zuteilung.');
+      // Generate (or fetch cached) assignment for the year
+      const assignment = computeAssignment();
+      if (!assignment) {
+        alert('Es konnte keine gültige Zuteilung gefunden werden. Bitte überprüfe die Familienzusammensetzung.');
         return;
       }
 
-      // deterministic rotation (next person)
-      const pos = familyMembers.indexOf(selectedName);
-      const recipient = familyMembers[(pos + 1) % familyMembers.length];
+      const recipient = assignment[selectedName];
 
-      showResult(recipient, familyIndex);
+      if(!recipient){
+        alert('Kein Empfänger für das ausgewählte Mitglied gefunden.');
+        return;
+      }
+
+      showResult(recipient);
       runConfetti();
     });
 
