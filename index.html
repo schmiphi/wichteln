@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Geschenke-Zuteilung für Familien</title>
+  <title>Riwa-Wichteln</title>
 
   <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700;800&display=swap" rel="stylesheet">
@@ -140,6 +140,12 @@
       transition: transform .12s ease;
     }
     button.primary:active{ transform:translateY(1px) scale(.997) }
+    button.primary[disabled]{
+      opacity:0.6;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
     button.ghost{
       background:transparent;
       border:1px solid #e6edf3;
@@ -260,7 +266,7 @@
 
           <div class="controls">
             <div style="flex:1"></div>
-            <button class="primary" type="submit" aria-label="Empfänger anzeigen">Empfänger anzeigen</button>
+            <button id="submitBtn" class="primary" type="submit" aria-label="Empfänger anzeigen">Empfänger anzeigen</button>
             <button class="ghost" type="button" id="resetBtn" title="Formular zurücksetzen">Zurücksetzen</button>
           </div>
         </form>
@@ -326,6 +332,11 @@
     const resetBtn = document.getElementById('resetBtn');
     const confettiContainer = document.getElementById('confetti');
     const siteTitleEl = document.getElementById('siteTitle');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Draw availability: only allow assignment from October (month index 9) through December
+    const DRAW_START_MONTH = 9; // October (0-based)
+    const isDrawAvailable = (new Date().getMonth() >= DRAW_START_MONTH);
 
     // create a stable sorted members array used both for UI and assignment generation
     const SORTED_MEMBERS = FAMILY_MEMBERS.slice().sort((a,b)=>{
@@ -351,6 +362,23 @@
     (function setSiteTitle(){
       const nextYear = new Date().getFullYear();
       siteTitleEl.textContent = `Riwa-Wichtelator ${nextYear}`;
+    })();
+
+    // If draw is not available show message and disable submit
+    (function applyDrawAvailabilityUI(){
+      if(!isDrawAvailable){
+        // show message instead of empty result
+        resultEmpty.textContent = 'Die Auslosung beginnt im Oktober';
+        // make message prominent (remove muted)
+        resultEmpty.classList.remove('muted');
+        resultEmpty.style.color = '#333';
+        // disable submit so assignment cannot be generated
+        if(submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.title = 'Auslosung nur ab Oktober verfügbar';
+          submitBtn.setAttribute('aria-disabled', 'true');
+        }
+      }
     })();
 
     // seeded RNG (mulberry32 variant)
@@ -476,6 +504,15 @@
       event.preventDefault();
       clearResult();
 
+      // Block attempts outside allowed months
+      if(!isDrawAvailable){
+        // show the same message in the result area
+        resultEmpty.textContent = 'Die Auslosung beginnt im Oktober';
+        resultEmpty.classList.remove('muted');
+        resultEmpty.style.color = '#333';
+        return;
+      }
+
       const selectedName = memberSelect.value;
       if(!selectedName){
         alert('Bitte einen Namen auswählen.');
@@ -538,6 +575,12 @@
     resetBtn.addEventListener('click', () => {
       form.reset();
       clearResult();
+      // If draw is not available, re-show the "beginnt im Oktober" message
+      if(!isDrawAvailable){
+        resultEmpty.textContent = 'Die Auslosung beginnt im Oktober';
+        resultEmpty.classList.remove('muted');
+        resultEmpty.style.color = '#333';
+      }
     });
 
     // Improve accessibility: focus select on load
