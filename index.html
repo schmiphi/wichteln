@@ -5,206 +5,603 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Riwa-Wichteln</title>
 
+  <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700;800&display=swap" rel="stylesheet">
 
   <style>
+    :root{
+      --bg-1: #0f1724;
+      --accent-1: #ffb86b;
+      --accent-2: #ff6b9f;
+      --card-bg: rgba(255,255,255,0.98);
+      --muted: #6b7280;
+      --success: #16a34a;
+      --shadow: 0 10px 30px rgba(2,6,23,0.45);
+      --glass: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    }
+
+    /* Festive gradient background with stars/ornaments */
     html,body{
       height:100%;
       margin:0;
-      font-family:"Nunito", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-      background:#07142a;
-      color:#0b1220;
+      font-family:"Nunito", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, #07142a 0%, #08243f 40%, #072a2c 100%);
+      color: #0b1220;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
     }
-    .scene{
+
+    .scene {
       min-height:100vh;
       display:flex;
       align-items:center;
       justify-content:center;
+      padding: 3rem 1rem;
+      position:relative;
+      overflow:hidden;
     }
+
+    /* Decorative ornaments */
+    .ornament{
+      position:absolute;
+      border-radius:50%;
+      filter:blur(10px);
+      opacity:0.12;
+      transform: translateZ(0);
+    }
+    .ornament--1{ width:420px; height:420px; background: radial-gradient(circle at 30% 30%, #ffb86b, #ff8fa3 60%); top:-8%; left:-8%;}
+    .ornament--2{ width:300px; height:300px; background: radial-gradient(circle at 70% 30%, #7ee7ff, #8bf6c1 60%); bottom:-6%; right:-12%;}
+    .snowflake{
+      position:absolute;
+      width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.12);box-shadow:0 0 10px rgba(255,255,255,0.1);
+      animation: drift 10s linear infinite;
+      opacity:0.9;
+    }
+    @keyframes drift{
+      0%{transform: translateY(-5vh) translateX(0) scale(0.7)}
+      50%{transform: translateY(40vh) translateX(15vw) scale(1)}
+      100%{transform: translateY(90vh) translateX(-10vw) scale(0.9)}
+    }
+
+    /* Card */
     .card{
-      background:white;
-      padding:24px;
-      border-radius:12px;
       width:100%;
-      max-width:700px;
+      max-width:760px;
+      background: var(--card-bg);
+      border-radius:14px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      position:relative;
+      z-index:10;
       display:grid;
-      grid-template-columns:1fr 260px;
-      gap:20px;
+      grid-template-columns: 1fr 340px;
+      gap:24px;
+      align-items:start;
     }
-    @media(max-width:800px){
-      .card{grid-template-columns:1fr;}
+
+    .site-title{
+      color: var(--accent-1);
+      font-weight:800;
+      font-size:1.05rem;
+      margin-bottom:0.5rem;
+      letter-spacing: -0.01em;
     }
+
+    h1{
+      margin:0 0 0.25rem 0;
+      font-size:1.6rem;
+      color: #052433;
+      letter-spacing: -0.02em;
+    }
+
+    p.lead{
+      margin:0 0 1rem 0;
+      color:var(--muted);
+      font-size:0.95rem;
+    }
+
+    /* Form area */
+    form{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    label{
+      font-size:0.85rem;
+      color: #334155;
+      font-weight:700;
+      margin-top:8px;
+    }
+
+    select, input[type="password"]{
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #e6edf3;
+      background: linear-gradient(180deg,#fff,#fbfdff);
+      font-size:1rem;
+      outline:none;
+    }
+
+    .controls{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    button.primary{
+      background: linear-gradient(90deg,var(--accent-1), var(--accent-2));
+      color:white;
+      border:0;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+      box-shadow: 0 6px 18px rgba(255,107,159,0.18);
+      transition: transform .12s ease;
+    }
+    button.primary:active{ transform:translateY(1px) scale(.997) }
+    button.primary[disabled]{
+      opacity:0.6;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+    button.ghost{
+      background:transparent;
+      border:1px solid #e6edf3;
+      padding:10px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      color:#0f1724;
+    }
+
+    .right{
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.98));
+      padding:18px;
+      border-radius:10px;
+      border:1px solid rgba(2,6,23,0.04);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      justify-content:center;
+      align-items:center;
+    }
+
+    .result-card{
+      width:100%;
+      text-align:center;
+      padding:14px;
+      border-radius:8px;
+      background: linear-gradient(90deg, rgba(255,255,255,1), rgba(255,250,244,0.98));
+      box-shadow: 0 6px 24px rgba(3,7,18,0.06);
+    }
+
+    .recipient{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .avatar{
+      width:56px;height:56px;border-radius:12px;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-weight:800;color:white;font-size:18px;
+      background: linear-gradient(135deg,var(--accent-2),var(--accent-1));
+      box-shadow:0 6px 18px rgba(255,107,159,0.14);
+    }
+
+    .recipient .name{
+      font-size:1.15rem;
+      color:#052433;
+      font-weight:800;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:0.92rem;
+    }
+
+    .small{
+      font-size:0.85rem;
+    }
+
+    .inline {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .copy-btn{
+      padding:8px 10px;border-radius:8px;border:0;background:#f1f5f9;cursor:pointer;
+      font-weight:700;
+    }
+
+    footer.note{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:0.85rem;
+    }
+
+    .confetti {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      overflow: visible;
+    }
+
+    @media (max-width:900px){
+      .card{ grid-template-columns:1fr; padding:20px; }
+      .ornament--1, .ornament--2 { display:none; }
+    }
+
   </style>
 </head>
-
 <body>
-<div class="scene">
-  <div class="card">
+  <div class="scene" role="main" aria-labelledby="page-title">
+    <div class="ornament ornament--1" aria-hidden="true"></div>
+    <div class="ornament ornament--2" aria-hidden="true"></div>
 
-    <div>
-      <h1>Wer bekommt dein Geschenk?</h1>
+    <!-- some gentle snowflakes -->
+    <div class="snowflake" style="left:10%; animation-delay:0s;"></div>
+    <div class="snowflake" style="left:30%; width:8px;height:8px; animation-duration:14s; animation-delay:2s;"></div>
+    <div class="snowflake" style="left:55%; animation-duration:9s; animation-delay:0.7s;"></div>
+    <div class="snowflake" style="left:78%; animation-duration:12s; animation-delay:1.5s;"></div>
 
-      <form id="giftForm">
-        <label>Dein Name</label><br>
-        <select id="memberSelect" required>
-          <option value="">Bitte Namen auswählen …</option>
-        </select><br><br>
+    <div class="card" aria-live="polite">
+      <div>
+        <div id="siteTitle" class="site-title" aria-hidden="true"></div>
+        <h1 id="page-title">Wer bekommt dein Geschenk?</h1>
+        <p class="lead">Wähle deinen Namen, gib das Familien-Passwort ein und sieh, wem du dieses Jahr ein Geschenk gibst.</p>
 
-        <label>Familien-Passwort</label><br>
-        <input id="passwordInput" type="password" required><br><br>
+        <form id="giftForm" aria-describedby="form-help">
+          <label for="memberSelect">Dein Name</label>
+          <select id="memberSelect" required aria-required="true">
+            <option value="">Bitte Namen auswählen …</option>
+          </select>
 
-        <button type="submit">Empfänger anzeigen</button>
-        <button type="button" id="resetBtn">Zurücksetzen</button>
-      </form>
+          <label for="passwordInput">Familien-Passwort</label>
+          <input id="passwordInput" type="password" autocomplete="current-password" required aria-required="true" placeholder="••••••">
+
+          <div class="controls">
+            <div style="flex:1"></div>
+            <button id="submitBtn" class="primary" type="submit" aria-label="Empfänger anzeigen">Empfänger anzeigen</button>
+            <button class="ghost" type="button" id="resetBtn" title="Formular zurücksetzen">Zurücksetzen</button>
+          </div>
+        </form>
+
+        <footer class="note">Tipp: Familien-Passwörter sollten vertraulich bleiben.</footer>
+      </div>
+
+      <aside class="right" aria-labelledby="result-title">
+        <div id="result" class="result-card" role="status" aria-live="polite">
+          <div id="resultEmpty" class="muted">Hier erscheint der Empfänger.</div>
+          <div id="resultCard" style="display:none;">
+            <div class="recipient">
+              <div class="avatar" id="avatar">A</div>
+              <div>
+                <div class="name" id="recipientName">Anna</div>
+                <!-- family hint removed from visible UI -->
+                <div class="muted small" id="recipientHint" style="display:none;">Familie: —</div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px; display:flex; gap:8px; align-items:center; justify-content:center;">
+              <button id="copyBtn" class="copy-btn" title="Name kopieren">Kopieren</button>
+              <button id="shareBtn" class="copy-btn" title="Teilen" style="display:none;">Teilen</button>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
 
-    <aside>
-      <div id="resultEmpty">Hier erscheint der Empfänger.</div>
-      <div id="resultCard" style="display:none;">
-        <strong id="recipientName"></strong>
-      </div>
-    </aside>
-
+    <div id="confetti" class="confetti" aria-hidden="true"></div>
   </div>
-</div>
 
-<script>
-/* ================= DATA ================= */
+  <script>
+    // Familienmitglieder (beliebig anpassen!)
+    const FAMILY_MEMBERS = [
+      { name: "Emil", index: 0 },
+      { name: "Anton", index: 0 },
+      { name: "Juri", index: 1 },
+      { name: "Ayla", index: 1 },
+      { name: "Ottilia", index: 2 },
+      { name: "Kleo", index: 2 },
+      { name: "Dawson", index: 3 }
+    ];
 
-const FAMILY_MEMBERS = [
-  { name: "Emil", index: 0 },
-  { name: "Anton", index: 0 },
-  { name: "Juri", index: 1 },
-  { name: "Ayla", index: 1 },
-  { name: "Ottilia", index: 2 },
-  { name: "Kleo", index: 2 },
-  { name: "Dawson", index: 3 }
-];
+    // Passwort pro Familien-Index (beliebig anpassen!)
+    const FAMILY_PASSWORDS = {
+      0: "schnee", // Familie 0
+      1: "kerze",  // Familie 1
+      2: "stern",   // Familie 2
+      3: "christbaum"   // Familie 3
+    };
 
-const FAMILY_PASSWORDS = {
-  0: "schnee",
-  1: "kerze",
-  2: "stern",
-  3: "christbaum"
-};
+    // --- DOM references ---
+    const memberSelect = document.getElementById('memberSelect');
+    const form = document.getElementById('giftForm');
+    const passwordInput = document.getElementById('passwordInput');
+    const resultEmpty = document.getElementById('resultEmpty');
+    const resultCard = document.getElementById('resultCard');
+    const avatarEl = document.getElementById('avatar');
+    const recipientNameEl = document.getElementById('recipientName');
+    const recipientHintEl = document.getElementById('recipientHint');
+    const copyBtn = document.getElementById('copyBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const confettiContainer = document.getElementById('confetti');
+    const siteTitleEl = document.getElementById('siteTitle');
+    const submitBtn = document.getElementById('submitBtn');
 
-/* ================= SETUP ================= */
+    // Draw availability: only allow assignment from October (month index 9) through December
+    const DRAW_START_MONTH = 9; // October (0-based)
+    const isDrawAvailable = (new Date().getMonth() >= DRAW_START_MONTH);
 
-const memberSelect = document.getElementById("memberSelect");
-const form = document.getElementById("giftForm");
-const passwordInput = document.getElementById("passwordInput");
-const resultEmpty = document.getElementById("resultEmpty");
-const resultCard = document.getElementById("resultCard");
-const recipientNameEl = document.getElementById("recipientName");
-const resetBtn = document.getElementById("resetBtn");
+    // create a stable sorted members array used both for UI and assignment generation
+    const SORTED_MEMBERS = FAMILY_MEMBERS.slice().sort((a,b)=>{
+      const na = a.name.toLowerCase();
+      const nb = b.name.toLowerCase();
+      if(na < nb) return -1;
+      if(na > nb) return 1;
+      return 0;
+    });
 
-const SORTED_MEMBERS = FAMILY_MEMBERS.slice().sort((a,b)=>
-  a.name.localeCompare(b.name)
-);
+    // Populate select with names alphabetically (no family groups)
+    (function populateSelect(){
+      SORTED_MEMBERS.forEach(member => {
+        const o = document.createElement('option');
+        o.value = member.name;
+        o.textContent = member.name;
+        o.dataset.familyIndex = member.index;
+        memberSelect.appendChild(o);
+      });
+    })();
 
-SORTED_MEMBERS.forEach(m=>{
-  const o=document.createElement("option");
-  o.value=m.name;
-  o.textContent=m.name;
-  memberSelect.appendChild(o);
-});
+    // Set dynamic site title to next year (e.g. "Riwa-Wichtelator 2025")
+    (function setSiteTitle(){
+      const nextYear = new Date().getFullYear();
+      siteTitleEl.textContent = `Riwa-Wichtelator ${nextYear}`;
+    })();
 
-/* ================= RNG ================= */
-
-function mulberry32(seed){
-  let t = seed >>> 0;
-  return function(){
-    t += 0x6D2B79F5;
-    let r = Math.imul(t ^ (t >>> 15), 1 | t);
-    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function shuffleArray(arr, rng){
-  const a = arr.slice();
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(rng()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
-
-/* ================= ASSIGNMENT ================= */
-/* no self, no same family, no A<->B */
-
-function computeAssignment(){
-  const year = new Date().getFullYear();
-  const baseSeed = year >>> 0;
-  const givers = SORTED_MEMBERS.slice();
-  const N = givers.length;
-
-  if (N <= 2) return null;
-
-  const maxAttempts = 5000;
-
-  for(let attempt=0; attempt<maxAttempts; attempt++){
-    const rng = mulberry32(baseSeed + attempt*97);
-    const receivers = shuffleArray(givers, rng);
-
-    let mapping = {};
-    let ok = true;
-
-    for(let i=0;i<N;i++){
-      const g=givers[i];
-      const r=receivers[i];
-
-      if(g.name===r.name || g.index===r.index){
-        ok=false;
-        break;
+    // If draw is not available show message and disable submit
+    (function applyDrawAvailabilityUI(){
+      if(!isDrawAvailable){
+        // show message instead of empty result
+        resultEmpty.textContent = 'Die Auslosung beginnt im Oktober';
+        // make message prominent (remove muted)
+        resultEmpty.classList.remove('muted');
+        resultEmpty.style.color = '#333';
+        // disable submit so assignment cannot be generated
+        if(submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.title = 'Auslosung nur ab Oktober verfügbar';
+          submitBtn.setAttribute('aria-disabled', 'true');
+        }
       }
-      mapping[g.name]=r.name;
-    }
-    if(!ok) continue;
+    })();
 
-    // forbid reciprocal swaps
-    for(const a in mapping){
-      const b = mapping[a];
-      if(mapping[b]===a){
-        ok=false;
-        break;
+    // seeded RNG (mulberry32 variant)
+    function mulberry32(seed) {
+      let t = seed >>> 0;
+      return function() {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    // Fisher-Yates shuffle using provided RNG function
+    function shuffleArray(arr, rng) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // computeAssignment:
+    // - returns an object mapping giverName -> receiverName
+    // - ensures every giver gives exactly one gift and every receiver receives exactly one gift
+    // - ensures giver and receiver are from different families
+    // - deterministic for a given year (seed = nextYear)
+    // - tries multiple deterministic random shuffles; if a shuffle fails constraints, try next shuffle
+    // - returns null if no valid assignment found after attempts
+    //
+    // UPDATE: also avoids 2-cycles (A -> B and B -> A)
+    function computeAssignment() {
+      const nextYear = new Date().getFullYear();
+
+      const baseSeed = nextYear >>> 0;
+      // use SORTED_MEMBERS as the giver ordering (stable & matches UI)
+      const givers = SORTED_MEMBERS.slice(); // array of {name, index}
+      const N = givers.length;
+
+      // trivial impossible checks
+      // if there is only one person overall, impossible
+      if (N <= 1) return null;
+
+      const maxAttempts = 5000;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const rng = mulberry32((baseSeed + attempt * 97) >>> 0);
+        // create a shuffled receivers list of objects
+        const receivers = shuffleArray(givers.map(m => ({ name: m.name, index: m.index })), rng);
+
+        // check constraints: for each giver at pos i, receiver at same i must be different person and different family
+        let ok = true;
+        for (let i = 0; i < N; i++) {
+          const giver = givers[i];
+          const receiver = receivers[i];
+          if (giver.name === receiver.name || giver.index === receiver.index) {
+            ok = false;
+            break;
+          }
+        }
+
+        if (ok) {
+          const mapping = {};
+          for (let i = 0; i < N; i++) mapping[givers[i].name] = receivers[i].name;
+
+          // NEW: reject 2-cycles (A->B and B->A)
+          for (let i = 0; i < N; i++) {
+            const a = givers[i].name;
+            const b = mapping[a];
+            if (mapping[b] === a) { // mutual pair
+              ok = false;
+              break;
+            }
+          }
+
+          if (ok) return mapping;
+        }
+
+        // else try next attempt (different shuffle). No repair attempts.
+      }
+
+      // no valid assignment found after attempts
+      return null;
+    }
+
+    function showResult(name){
+      resultEmpty.style.display = 'none';
+      resultCard.style.display = 'block';
+      avatarEl.textContent = String(name).trim().slice(0,2).toUpperCase();
+      recipientNameEl.textContent = name;
+      recipientHintEl.style.display = 'none';
+      copyBtn.dataset.copy = name;
+    }
+
+    function clearResult(){
+      resultEmpty.style.display = '';
+      resultCard.style.display = 'none';
+    }
+
+    function runConfetti(){
+      // simple DOM confetti: create colored pieces and animate them, auto-remove
+      const colors = ["#FF6B9F","#FFD36E","#7EE7FF","#8BF6C1","#C084FC"];
+      const count = 26;
+      for(let i=0;i<count;i++){
+        const piece = document.createElement('div');
+        piece.style.position = 'absolute';
+        piece.style.width = `${Math.random()*10 + 6}px`;
+        piece.style.height = `${Math.random()*6 + 6}px`;
+        piece.style.left = `${50 + (Math.random()-0.5)*60}%`;
+        piece.style.top = `${40 + (Math.random()-0.5)*20}%`;
+        piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+        piece.style.opacity = '0.95';
+        piece.style.borderRadius = `${Math.random()*20}%`;
+        piece.style.transform = `translateY(0) rotate(${Math.random()*360}deg)`;
+        piece.style.zIndex = 40;
+        piece.style.pointerEvents = 'none';
+        piece.style.transition = `transform 1200ms cubic-bezier(.2,.9,.3,1), opacity 1200ms ease`;
+        confettiContainer.appendChild(piece);
+
+        // force layout then animate
+        requestAnimationFrame(() => {
+          const vx = (Math.random()-0.5)*300;
+          const vy = - (Math.random()*600 + 200);
+          const rot = (Math.random()-0.5)*720;
+          piece.style.transform = `translate(${vx}px, ${vy}px) rotate(${rot}deg)`;
+          piece.style.opacity = '0';
+        });
+
+        // remove after animation
+        setTimeout(()=> piece.remove(), 1400 + Math.random()*300);
       }
     }
-    if(ok) return mapping;
-  }
-  return null;
-}
 
-/* ================= FORM ================= */
+    // Form submit handling
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      clearResult();
 
-form.addEventListener("submit", e=>{
-  e.preventDefault();
+      // Block attempts outside allowed months
+      if(!isDrawAvailable){
+        // show the same message in the result area
+        resultEmpty.textContent = 'Die Auslosung beginnt im Oktober';
+        resultEmpty.classList.remove('muted');
+        resultEmpty.style.color = '#333';
+        return;
+      }
 
-  const name = memberSelect.value;
-  const member = FAMILY_MEMBERS.find(m=>m.name===name);
-  if(!member) return alert("Ungültiger Name");
+      const selectedName = memberSelect.value;
+      if(!selectedName){
+        alert('Bitte einen Namen auswählen.');
+        return;
+      }
 
-  // ✅ CASE-INSENSITIVE PASSWORD CHECK
-  const entered = passwordInput.value.trim().toLowerCase();
-  const correct = (FAMILY_PASSWORDS[member.index] || "").toLowerCase();
+      // find member in original list (index property comes from FAMILY_MEMBERS)
+      const member = FAMILY_MEMBERS.find(m => m.name === selectedName);
+      if(!member){
+        alert('Ausgewähltes Mitglied nicht gefunden.');
+        return;
+      }
 
-  if(entered !== correct){
-    return alert("Falsches Familien-Passwort");
-  }
+      const familyIndex = member.index;
 
-  const assignment = computeAssignment();
-  if(!assignment) return alert("Keine gültige Zuteilung möglich");
+      // UPDATE: make password check case-insensitive
+      const correctPassword = (FAMILY_PASSWORDS[familyIndex] || '').trim().toLowerCase();
+      const providedPassword = (passwordInput.value || '').trim().toLowerCase();
 
-  recipientNameEl.textContent = assignment[name];
-  resultEmpty.style.display="none";
-  resultCard.style.display="block";
-});
+      if(providedPassword !== correctPassword){
+        alert('Falsches Familien-Passwort.');
+        return;
+      }
 
-resetBtn.addEventListener("click", ()=>{
-  form.reset();
-  resultEmpty.style.display="";
-  resultCard.style.display="none";
-});
-</script>
+      // Generate assignment for the year
+      const assignment = computeAssignment();
+      if (!assignment) {
+        alert('Es konnte keine gültige Zuteilung gefunden werden. Bitte überprüfe die Familienzusammensetzung.');
+        return;
+      }
+
+      const recipient = assignment[selectedName];
+
+      if(!recipient){
+        alert('Kein Empfänger für das ausgewählte Mitglied gefunden.');
+        return;
+      }
+
+      showResult(recipient);
+      runConfetti();
+    });
+
+    // Copy button
+    copyBtn.addEventListener('click', () => {
+      const text = copyBtn.dataset.copy || '';
+      if(!text) return;
+      navigator.clipboard?.writeText(text).then(()=>{
+        copyBtn.textContent = 'Kopiert ✓';
+        setTimeout(()=> copyBtn.textContent = 'Kopieren', 1500);
+      }).catch(()=>{
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); copyBtn.textContent = 'Kopiert ✓'; }
+        catch(e){ alert('Kopie nicht möglich'); }
+        ta.remove();
+        setTimeout(()=> copyBtn.textContent = 'Kopieren', 1500);
+      });
+    });
+
+    // Reset button
+    resetBtn.addEventListener('click', () => {
+      form.reset();
+      clearResult();
+      // If draw is not available, re-show the "beginnt im Oktober" message
+      if(!isDrawAvailable){
+        resultEmpty.textContent = 'Die Auslosung beginnt im Oktober';
+        resultEmpty.classList.remove('muted');
+        resultEmpty.style.color = '#333';
+      }
+    });
+
+    // Improve accessibility: focus select on load
+    window.addEventListener('load', () => {
+      memberSelect.focus();
+    });
+  </script>
 </body>
-</html>
+  </html>
