@@ -404,63 +404,101 @@
 
     // computeAssignment:
     // - returns an object mapping giverName -> receiverName
-    // - ensures every giver gives exactly one gift and every receiver receives exactly one gift
-    // - ensures giver and receiver are from different families
-    // - deterministic for a given year (seed = nextYear)
-    // - tries multiple deterministic random shuffles; if a shuffle fails constraints, try next shuffle
-    // - returns null if no valid assignment found after attempts
+    // - every giver gives exactly one gift and every receiver receives exactly one gift
+    // - giver and receiver must be from different families
+    // - no 2-cycles (A -> B and B -> A)
+    // - from 2026 onwards, nobody may receive the same person as in the previous year
+    // - assignments are deterministic for a given year
     //
-    // UPDATE: also avoids 2-cycles (A -> B and B -> A)
-    function computeAssignment() {
-      const nextYear = new Date().getFullYear();
+    // 2025 is the fixed starting assignment. Later years are generated
+    // recursively from the previous year's assignment.
+    const BASE_YEAR = 2025;
+    const BASE_ASSIGNMENT = {
+      "Anton": "Dawson",
+      "Ayla": "Emil",
+      "Dawson": "Anton",
+      "Emil": "Kleo",
+      "Juri": "Ottilia",
+      "Kleo": "Ayla",
+      "Ottilia": "Juri"
+    };
 
-      const baseSeed = nextYear >>> 0;
-      // use SORTED_MEMBERS as the giver ordering (stable & matches UI)
-      const givers = SORTED_MEMBERS.slice(); // array of {name, index}
+    function computeAssignment(year = new Date().getFullYear()) {
+      // 2025 is the fixed starting point for the recursive sequence.
+      if (year === BASE_YEAR) {
+        return { ...BASE_ASSIGNMENT };
+      }
+
+      // The algorithm is defined from 2025 onwards.
+      if (year < BASE_YEAR) {
+        return null;
+      }
+
+      // First compute the assignment for the previous year.
+      const previousAssignment = computeAssignment(year - 1);
+      if (!previousAssignment) return null;
+
+      const baseSeed = year >>> 0;
+      const givers = SORTED_MEMBERS.slice();
       const N = givers.length;
 
-      // trivial impossible checks
-      // if there is only one person overall, impossible
       if (N <= 1) return null;
 
       const maxAttempts = 5000;
+
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const rng = mulberry32((baseSeed + attempt * 97) >>> 0);
-        // create a shuffled receivers list of objects
-        const receivers = shuffleArray(givers.map(m => ({ name: m.name, index: m.index })), rng);
 
-        // check constraints: for each giver at pos i, receiver at same i must be different person and different family
+        // Randomize the receivers in exactly the same way as before.
+        const receivers = shuffleArray(
+          givers.map(m => ({ name: m.name, index: m.index })),
+          rng
+        );
+
         let ok = true;
+
         for (let i = 0; i < N; i++) {
           const giver = givers[i];
           const receiver = receivers[i];
+
+          // Same constraints as before:
+          // - cannot give to yourself
+          // - cannot give within the same family
           if (giver.name === receiver.name || giver.index === receiver.index) {
+            ok = false;
+            break;
+          }
+
+          // New constraint:
+          // nobody may receive the same person as in the previous year.
+          if (previousAssignment[giver.name] === receiver.name) {
             ok = false;
             break;
           }
         }
 
-        if (ok) {
-          const mapping = {};
-          for (let i = 0; i < N; i++) mapping[givers[i].name] = receivers[i].name;
+        if (!ok) continue;
 
-          // NEW: reject 2-cycles (A->B and B->A)
-          for (let i = 0; i < N; i++) {
-            const a = givers[i].name;
-            const b = mapping[a];
-            if (mapping[b] === a) { // mutual pair
-              ok = false;
-              break;
-            }
-          }
-
-          if (ok) return mapping;
+        const mapping = {};
+        for (let i = 0; i < N; i++) {
+          mapping[givers[i].name] = receivers[i].name;
         }
 
-        // else try next attempt (different shuffle). No repair attempts.
+        // Keep the existing no-2-cycle constraint.
+        for (let i = 0; i < N; i++) {
+          const a = givers[i].name;
+          const b = mapping[a];
+
+          if (mapping[b] === a) {
+            ok = false;
+            break;
+          }
+        }
+
+        if (ok) return mapping;
       }
 
-      // no valid assignment found after attempts
+      // No valid assignment found after the deterministic attempts.
       return null;
     }
 
@@ -604,4 +642,4 @@
     });
   </script>
 </body>
-  </html>
+</html>
